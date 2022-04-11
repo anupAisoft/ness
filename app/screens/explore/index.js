@@ -1,25 +1,19 @@
-import React, {useEffect, useState, useRef, useCallback} from 'react';
+import React, {useEffect, useState, useRef, useCallback, useMemo} from 'react';
 import {
   View,
   Text,
   Dimensions,
-  PanResponder,
-  ActivityIndicator,
   Image,
-  Animated,
   StyleSheet,
   ScrollView,
   StatusBar,
   TouchableOpacity,
 } from 'react-native';
-import axios from 'axios';
+
 import MapView, {Marker, PROVIDER_GOOGLE} from 'react-native-maps';
 import Search from './Search';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import {useIsFocused} from '@react-navigation/native';
 
-//http://192.168.56.1/citizenapi/api/GetLocationDataByLocationID?Locationid=MST0000024
 import {LogBox} from 'react-native';
 LogBox.ignoreLogs(['new NativeEventEmitter']);
 LogBox.ignoreAllLogs();
@@ -27,108 +21,65 @@ import {data} from './data';
 import ModalView from './ModalView';
 import CustomMarker from './CustomMarker';
 import Profile from '../profile';
-import {Base_url} from '../../key';
-import {get_coordinates} from '../../actions/coordinates';
 
+import {get_coordinates, marker_seleted} from '../../actions/coordinates';
 import {connect, useSelector} from 'react-redux';
-import {location_details} from '../../actions/loacationDetails';
+
+import BottomSheet from '@gorhom/bottom-sheet';
+import {get_location_details} from '../../actions/loacationDetails';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+
 const SCREEN_HEIGHT = Dimensions.get('window').height;
-const SCREEN_WIDTH = Dimensions.get('window').width;
 
-const Explore = ({navigation, get_coordinates, location_details}) => {
-  const isFocused = useIsFocused();
-
+const Explore = ({
+  navigation,
+  get_coordinates,
+  get_location_details,
+  marker_seleted,
+}) => {
+  const {coordinates} = useSelector(state => state.coordinates);
+  const {lat, lng} = useSelector(state => state.setLatLang);
   const location_data = useSelector(state => state.location_details.data);
-  // console.log(location_data)
 
-  const coordinates = useSelector(state => state.coordinates);
-  const latlang = useSelector(state => state.setLatLang);
-  const myR = useRef(null);
+  ///state data
+  // console.log(coordinates, 'latlang');
+
+  const mapRef = useRef(null);
 
   const [markerData, setMarkerData] = useState(null);
   const [latitute, setLatitute] = useState(41.85942);
   const [longitute, setLongitute] = useState(-71.519236);
   const [isLoading, setIsLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const hideModal = () => {
-    setModalVisible(true);
-    setTimeout(() => {
-      setModalVisible(false);
-    }, 5000);
 
-    // stopRecording();
+  // added by Dildar Khan start
+  const bottomSheetRef = useRef(null);
 
-    // setResult('');
-  };
-  // console.log(typeof latitute)
-  const containerStyle = {backgroundColor: 'white', padding: 20};
-  const pan = useState(new Animated.ValueXY({x: 0, y: SCREEN_HEIGHT - 200}))[0];
+  const snapPoints = useMemo(() => ['20%', '100%'], []);
 
-  const panResponder = useState(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        pan.extractOffset();
-        return true;
-      },
-      onPanResponderMove: (e, gestureState) => {
-        pan.setValue({x: 0, y: gestureState.dy});
-      },
-      onPanResponderRelease: (e, gestureState) => {
-        if (gestureState.moveY > SCREEN_HEIGHT - 200) {
-          Animated.spring(pan.y, {
-            toValue: 0,
-            tension: 1,
-            useNativeDriver: true,
-          }).start();
-        } else if (gestureState.moveY < 200) {
-          Animated.spring(pan.y, {
-            toValue: 0,
-            tension: 1,
-            useNativeDriver: true,
-          }).start();
-        } else if (gestureState.dy < 0) {
-          Animated.spring(pan.y, {
-            toValue: -SCREEN_HEIGHT + 200,
-            tension: 1,
-            useNativeDriver: true,
-          }).start();
-        } else if (gestureState.dy > 0) {
-          Animated.spring(pan.y, {
-            toValue: SCREEN_HEIGHT - 200,
-            tension: 1,
-            useNativeDriver: true,
-          }).start();
-        }
-      },
-    }),
-  )[0];
+  const handleSheetChanges = useCallback(index => {
+    console.log('handleSheetChanges', index);
+  }, []);
+  // added by Dildar Khan end
+  //anup
   const onRechange = (lat, lng) => {
     setLatitute(lat);
     setLongitute(lng);
   };
-  // const getLatLong=()=>{
-
-  //   setLatitute(latlang.lat)
-  //   setLongitute(latlang.lng)
-  // }
-  const animatedHeight = {
-    transform: pan.getTranslateTransform(),
-  };
 
   const onMapReadyHandler = () => {
     if (Platform.OS === 'ios') {
-      myR.current.fitToElements(false);
+      mapRef.current.fitToElements(false);
     } else {
       const markersCoordinates = [];
 
-      coordinates.coordinates.forEach(coords => {
+      coordinates.forEach(coords => {
         markersCoordinates.push({
           latitude: coords.Latitude,
           longitude: coords.Longitude,
         });
       });
-      myR.current.fitToCoordinates(markersCoordinates, {
+      mapRef.current.fitToCoordinates(markersCoordinates, {
         animated: true,
         edgePadding: {
           top: 200,
@@ -147,32 +98,108 @@ const Explore = ({navigation, get_coordinates, location_details}) => {
 
   //   getLatLong()
   // }, [isFocused]);
+  const renderBottomSheet = () => {
+    return (
+      <BottomSheet
+        handleIndicatorStyle={{
+          backgroundColor: '#757575',
+          height: 2.5,
+          opacity: 0.5,
+        }}
+        enabledInnerScrolling={true}
+        enabledContentGestureInteraction={false}
+        ref={bottomSheetRef}
+        index={-1}
+        snapPoints={snapPoints}
+        enablePanDownToClose={true}
+        // onChange={handleSheetChanges}
+      >
+        <View style={{width: '100%', height: 110}}>
+          {location_data ? (
+            <>
+              <View style={{...styles.bottomUpperTop}}>
+                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  <MaterialIcons
+                    name="keyboard-arrow-right"
+                    size={24}
+                    color="#1b5a90"
+                    style={{marginTop: 5}}
+                  />
+                  <Text style={{color: '#1b5a90'}}>
+                    {location_data?.FullAddress}
+                  </Text>
+                </View>
+                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  <MaterialIcons
+                    name="keyboard-arrow-right"
+                    size={24}
+                    color="black"
+                  />
+                  <Text style={{color: '#1b5a90'}}>
+                    {location_data.Address}
+                  </Text>
+                </View>
+              </View>
+              <View
+                style={{
+                  ...styles.bottomUpperLower,
+                  marginTop: 3,
+                  paddingHorizontal: 5,
+                }}>
+                <View style={styles.buttonUpperLowerTop}>
+                  {/* <Text style={styles.textStyles}>
+                Site Status:
+                <Text style={{color: '#8cff84', fontWeight: 'bold'}}>
+                  {' '}
+                  Active{' '}
+                </Text>{' '}
+              </Text> */}
+                  <Text style={{...styles.textStyles, margin: 3}}>
+                    Site Type:
+                    <Text> {location_data.Concat_LocationTypes} </Text>{' '}
+                  </Text>
+                  {/* <Text style={styles.textStyles}>
+                Asset Cost(Y):<Text> :$26808 </Text>{' '}
+              </Text> */}
+                </View>
+                {/* <View style={{width: '50%', height: '100%', paddingLeft: 20}}>
+              <Text style={styles.textStyles}>Property Cost (Y):$0:00</Text>
+              <Text style={styles.textStyles}>Circuits:9 </Text>
+              <Text style={styles.textStyles}>Devices:5 </Text>
+            </View> */}
+              </View>
+            </>
+          ) : null}
+        </View>
+        <Profile />
+      </BottomSheet>
+    );
+  };
 
   return (
     <>
       <StatusBar backgroundColor="#1b5a90" barStyle="light-content" />
       <ModalView modalVisible={modalVisible} />
 
-      <View>
+      <View style={styles.container}>
         <MapView
-          ref={myR}
-          zoomControlEnabled={true}
+          ref={mapRef}
+          zoomControlEnabled={false}
           zoomEnabled={true}
-          enableZoomControl={true}
           zoomTapEnabled={true}
           rotateEnabled={true}
           scrollEnabled={true}
           provider={PROVIDER_GOOGLE}
-          style={{width: SCREEN_WIDTH, height: SCREEN_HEIGHT}}
+          style={styles.container}
           region={{
-            latitude: latitute,
-            longitude: longitute,
+            latitude: lat,
+            longitude: lng,
             latitudeDelta: 0.0112333,
             longitudeDelta: 5.001233,
           }}
           initialRegion={{
-            latitude: 41.85942,
-            longitude: -71.519236,
+            latitude: lat,
+            longitude: lng,
             latitudeDelta: 0.0112333,
             longitudeDelta: 5.001233,
           }}
@@ -181,8 +208,8 @@ const Explore = ({navigation, get_coordinates, location_details}) => {
               onMapReadyHandler();
             }, 5000)
           }>
-          {coordinates.coordinates &&
-            coordinates.coordinates.map((item, i) => {
+          {coordinates &&
+            coordinates.map((item, i) => {
               return (
                 <Marker
                   key={i}
@@ -190,8 +217,19 @@ const Explore = ({navigation, get_coordinates, location_details}) => {
                     latitude: item.Latitude,
                     longitude: item.Longitude,
                   }}
-                  onPress={() => location_details(item.Location_ID)}>
-                  <CustomMarker />
+                  onPress={() => {
+                    bottomSheetRef.current.snapToIndex(0);
+                    get_location_details(item.Location_ID);
+                    marker_seleted(i);
+                    // setMarkerData(item);
+                  }}>
+                  <CustomMarker isChecked={item.isChecked} />
+                  {/* <MapView.Callout
+                    onPress={() => {
+                      alert(item.Location_ID);
+                    }}>
+                    <View></View>
+                  </MapView.Callout> */}
                 </Marker>
               );
             })}
@@ -236,12 +274,7 @@ const Explore = ({navigation, get_coordinates, location_details}) => {
           </View>
         </View>
 
-        <Search
-          hideModal={hideModal}
-          onRechange={onRechange}
-          navigation={navigation}
-          modalVisible={modalVisible}
-        />
+        <Search modalVisible={modalVisible} />
         {/* =================search=============== */}
         <ScrollView
           horizontal
@@ -277,151 +310,17 @@ const Explore = ({navigation, get_coordinates, location_details}) => {
             </View>
           ))}
         </ScrollView>
-        {/* =================Category End=============== */}
-        <Animated.View
-          style={[
-            animatedHeight,
-            {
-              position: 'absolute',
-              right: 0,
-              left: 0,
-              width: SCREEN_WIDTH,
-              height: SCREEN_HEIGHT,
-              backgroundColor: '#f5f5f5',
-              // paddingTop:100,
-              zIndex: 10,
-            },
-          ]}
-          {...panResponder.panHandlers}>
-          {/* <View
-              style={{
-                width: '100%',
-                height: 200,
-                paddingHorizontal: 20,
-                paddingTop: 15,
-              }}>
-              <View style={{...styles.bottomUpperTop}}>
-                <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                  <MaterialIcons
-                    name="keyboard-arrow-right"
-                    size={24}
-                    color="#1b5a90"
-                  />
-                  <Text style={{color: '#1b5a90'}}>
-                    12500 E Araphone Rdu Centennial,CO 801222
-                  </Text>
-                </View>
-                <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                  <MaterialIcons
-                    name="keyboard-arrow-right"
-                    size={24}
-                    color="black"
-                  />
-                  <Text style={{color: '#1b5a90'}}>MST0005166 240 N</Text>
-                </View>
-              </View>
-              <View
-                style={{
-                  ...styles.bottomUpperLower,
-                  marginTop: 3,
-                  paddingHorizontal: 5,
-                }}>
-                <View style={styles.buttonUpperLowerTop}>
-                  <Text style={styles.textStyles}>
-                    Site Status:
-                    <Text style={{color: '#8cff84', fontWeight: 'bold'}}>
-                      {' '}
-                      Active{' '}
-                    </Text>{' '}
-                  </Text>
-                  <Text style={styles.textStyles}>
-                    Site Type:<Text> 3rd Party </Text>{' '}
-                  </Text>
-                  <Text style={styles.textStyles}>
-                    Asset Cost(Y):<Text> :$26808 </Text>{' '}
-                  </Text>
-                </View>
-                <View style={{width: '50%', height: '100%', paddingLeft: 20}}>
-                  <Text style={styles.textStyles}>Property Cost (Y):$0:00</Text>
-                  <Text style={styles.textStyles}>Circuits:9 </Text>
-                  <Text style={styles.textStyles}>Devices:5 </Text>
-                </View>
-              </View> */}
-          {/* </View> */}
-          <View
-            style={{
-              width: '100%',
-              height: 140,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}>
-           
-              {location_data ? (
-                   <>
-               <View style={{...styles.bottomUpperTop}}>
-             
-                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                    <MaterialIcons
-                      name="keyboard-arrow-right"
-                      size={24}
-                      color="#1b5a90"
-                      style={{ marginTop:5}}
-                    />
-                    <Text style={{color: '#1b5a90'}}>
-                      {location_data?.FullAddress}
-                    </Text>
-                  </View>
-                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                    <MaterialIcons
-                      name="keyboard-arrow-right"
-                      size={24}
-                      color="black"
-                    />
-                    <Text style={{color: '#1b5a90'}}>
-                      {location_data.Address}
-                    </Text>
-                  </View>
-            </View>
-            <View
-            style={{
-              ...styles.bottomUpperLower,
-              marginTop: 3,
-              paddingHorizontal: 5,
-            }}>
-            <View style={styles.buttonUpperLowerTop}>
-              {/* <Text style={styles.textStyles}>
-                Site Status:
-                <Text style={{color: '#8cff84', fontWeight: 'bold'}}>
-                  {' '}
-                  Active{' '}
-                </Text>{' '}
-              </Text> */}
-              <Text style={{...styles.textStyles,}}>
-                Site Type:<Text> {location_data.Concat_LocationTypes} </Text>{' '}
-              </Text>
-              {/* <Text style={styles.textStyles}>
-                Asset Cost(Y):<Text> :$26808 </Text>{' '}
-              </Text> */}
-            </View>
-            {/* <View style={{width: '50%', height: '100%', paddingLeft: 20}}>
-              <Text style={styles.textStyles}>Property Cost (Y):$0:00</Text>
-              <Text style={styles.textStyles}>Circuits:9 </Text>
-              <Text style={styles.textStyles}>Devices:5 </Text>
-            </View> */}
-          </View>
-          </>
-
-              ) : null}
-            
-          </View>
-          <Profile />
-        </Animated.View>
       </View>
+      {renderBottomSheet()}
     </>
   );
 };
 
-export default connect(null, {get_coordinates, location_details})(Explore);
+export default connect(null, {
+  get_coordinates,
+  get_location_details,
+  marker_seleted,
+})(Explore);
 
 const styles = StyleSheet.create({
   searchRight: {
@@ -523,4 +422,13 @@ const styles = StyleSheet.create({
     top: Platform.OS === 'ios' ? 80 : 80,
     paddingHorizontal: 10,
   },
+
+  // added by Dildar Khan start
+  container: {
+    flex: 1,
+  },
+  contentContainer: {
+    paddingTop: 10,
+  },
+  // added by Dildar Khan end
 });

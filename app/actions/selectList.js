@@ -24,7 +24,7 @@ export const select_all = list => async dispatch => {
     })
 }
 
-export const clear_al = list => async dispatch => {
+export const clear_all = list => async dispatch => {
    
     dispatch({
         type: CLEAR_ALL,

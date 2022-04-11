@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
 import {
- 
   View,
   Text,
   Dimensions,
@@ -9,20 +8,17 @@ import {
   Animated,
   StyleSheet,
   ScrollView,
- 
-  
 } from 'react-native';
 
-import MapView,{Marker, PROVIDER_GOOGLE} from 'react-native-maps';
-import Search from './Search'
+import MapView, {Marker, PROVIDER_GOOGLE} from 'react-native-maps';
+import Search from './Search';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { LogBox } from 'react-native';
+import {LogBox} from 'react-native';
 LogBox.ignoreLogs(['new NativeEventEmitter']);
 LogBox.ignoreAllLogs();
 import {data} from './data';
 import ModalView from './ModalView';
 import CustomMarker from './CustomMarker';
-
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -33,16 +29,14 @@ const Orders = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const hideModal = () => {
- 
     setModalVisible(true);
     setTimeout(() => {
       setModalVisible(false);
-     
     }, 5000);
- 
-   // stopRecording();
 
-   // setResult('');
+    // stopRecording();
+
+    // setResult('');
   };
   const containerStyle = {backgroundColor: 'white', padding: 20};
   const pan = useState(new Animated.ValueXY({x: 0, y: SCREEN_HEIGHT - 200}))[0];
@@ -55,7 +49,7 @@ const Orders = () => {
         return true;
       },
       onPanResponderMove: (e, gestureState) => {
-        console.log(gestureState.dy)
+        // console.log(gestureState.dy)
         pan.setValue({x: 0, y: gestureState.dy});
       },
       onPanResponderRelease: (e, gestureState) => {
@@ -93,14 +87,13 @@ const Orders = () => {
   };
 
   useEffect(() => {
-   //
+    //
   }, []);
 
   return (
     <>
-    <ModalView  modalVisible={modalVisible}/>
+      <ModalView modalVisible={modalVisible} />
 
-   
       {!isLoading && (
         <View>
           <MapView
@@ -111,23 +104,19 @@ const Orders = () => {
               longitude: longitute,
               latitudeDelta: 0.01,
               longitudeDelta: 0.01,
-            }}
-          >
-             <Marker 
-            coordinate={{
-              latitude: 37.78825,
-              longitude: -122.4324,
-            }}
-          
-            title="Test Title"
-            description="This is the test description"
-          >
-            <CustomMarker/>
-          </Marker>
-             </MapView>
+            }}>
+            <Marker
+              coordinate={{
+                latitude: 37.78825,
+                longitude: -122.4324,
+              }}
+              title="Test Title"
+              description="This is the test description">
+              <CustomMarker />
+            </Marker>
+          </MapView>
 
-         
-          <Search hideModal={hideModal} modalVisible={modalVisible}/>
+          <Search hideModal={hideModal} modalVisible={modalVisible} />
           {/* =================search=============== */}
           <ScrollView
             horizontal
@@ -145,23 +134,23 @@ const Orders = () => {
             contentContainerStyle={{
               paddingRight: Platform.OS === 'android' ? 20 : 0,
             }}>
-           {data.category.map((category, index) => (
-         <View
-           key={index}
-           style={{
-             ...styles.chipsItem,
-             backgroundColor: category.isVisible ? '#1b5a90' : 'white',
-           }}>
-           {category.isVisible ? category.icon : null}
-           <Text
-             style={{
-               color: category.isVisible ? '#ffffff' : '#1b5a90',
-               fontWeight: '800',
-             }}>
-             {category.name} #
-           </Text>
-         </View>
-       ))}   
+            {data.category.map((category, index) => (
+              <View
+                key={index}
+                style={{
+                  ...styles.chipsItem,
+                  backgroundColor: category.isVisible ? '#1b5a90' : 'white',
+                }}>
+                {category.isVisible ? category.icon : null}
+                <Text
+                  style={{
+                    color: category.isVisible ? '#ffffff' : '#1b5a90',
+                    fontWeight: '800',
+                  }}>
+                  {category.name} #
+                </Text>
+              </View>
+            ))}
           </ScrollView>
           {/* =================Category End=============== */}
           <Animated.View
@@ -244,7 +233,12 @@ const Orders = () => {
 export default Orders;
 
 const styles = StyleSheet.create({
-  searchRight: {width: '25%', height: '100%', borderRadius: 25, flexDirection:'row'},
+  searchRight: {
+    width: '25%',
+    height: '100%',
+    borderRadius: 25,
+    flexDirection: 'row',
+  },
   searchMiddele: {width: '60%', height: '100%'},
   searchLeft: {
     width: '15%',

@@ -1,6 +1,7 @@
-import {StyleSheet, Text, View,Image, FlatList, TextInput} from 'react-native';
+import {StyleSheet, Text, View, Image, FlatList, TextInput} from 'react-native';
 import React from 'react';
 import moment from 'moment';
+import {BottomSheetFlatList} from '@gorhom/bottom-sheet';
 
 import Item from './Item';
 const data = [
@@ -19,8 +20,12 @@ const Notes = () => {
   return (
     <>
       <View style={styles.container}>
-        <FlatList
+        {/* <BottomSheetScrollView
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.contentContainer} */}
+        <BottomSheetFlatList
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.contentContainer}
           data={data}
           renderItem={() => {
             return (
@@ -42,20 +47,44 @@ const Notes = () => {
           }}
           keyExtractor={Item => Item.id.toString()}
         />
+        {/* {data.map((item, i) => {
+            return (
+              <View>
+                <View style={styles.singleItem}>
+                  <Item />
+                </View>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}>
+                  <Text>{moment().format('DD-MM-YYYY')}</Text>
+                  <Text>{moment().format('hh:mm a')}</Text>
+                </View>
+              </View>
+            );
+          })}
+        </BottomSheetScrollView> */}
       </View>
-        <View style={styles.bottonSendView}>
-           <View style={{width:'80%',height:'100%',}}>
-            <TextInput style={{paddingLeft:15,fontSize:13}}
+      <View style={styles.bottonSendView}>
+        <View style={{width: '80%', height: '100%'}}>
+          <TextInput
+            style={{paddingLeft: 15, fontSize: 13}}
             fontSize={20}
-            placeholder='Type Here'/>
-           </View>
-           <View style={{width:'20%',height:'100%',
-           justifyContent:'center',alignItems:'center'}}>
-             
-              <Image source={ require('../../images/send.png')} />
-           </View>
-
-         </View>
+            placeholder="Type Here"
+          />
+        </View>
+        <View
+          style={{
+            width: '20%',
+            height: '100%',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+          <Image source={require('../../images/send.png')} />
+        </View>
+      </View>
     </>
   );
 };
@@ -66,6 +95,7 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 15,
     backgroundColor: '#f5f5f5',
+    flex: 1,
   },
   singleItem: {
     borderRadius: 8,
@@ -81,8 +111,17 @@ const styles = StyleSheet.create({
     shadowRadius: 5.46,
     elevation: 9,
   },
-  bottonSendView:{width:'100%', height:60,backgroundColor:'white',
-  borderTopWidth:.5,borderTopColor:'#757575',
-  flexDirection:'row',
-   position:'absolute',bottom:50,left:0,right:0}
+  bottonSendView: {
+    width: '100%',
+    height: 60,
+    backgroundColor: 'white',
+    borderTopWidth: 0.5,
+    borderTopColor: '#757575',
+    flexDirection: 'row',
+    position: 'absolute',
+    bottom: 50,
+    left: 0,
+    right: 0,
+  },
+  contentContainer: {},
 });

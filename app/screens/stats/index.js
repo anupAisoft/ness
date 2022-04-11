@@ -1,28 +1,26 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import {StyleSheet, Text, View} from 'react-native';
+import React from 'react';
+import {GooglePlacesAutocomplete} from 'react-native-google-places-autocomplete';
 //AIzaSyDOyxhWdKWUM0PiYg97jx5tk3eB1NniLbU
 const Stats = () => {
-  return (<>
-   
+  return (
+    <>
+      <GooglePlacesAutocomplete
+        fetchDetails={true}
+        placeholder="Search Location"
+        onPress={(data, details = null) => {
+          // 'details' is provided when fetchDetails = true
+          //const address = data.description.split(',');
+          // console.log(data, details )
+        }}
+        query={{
+          key: 'AIzaSyAn9wVgUpu0h_LAHr0LPrzcKQjQ9uVczT8',
+          language: 'en',
+        }}
+      />
 
-    <GooglePlacesAutocomplete
-    fetchDetails={true}
-    placeholder="Search Location"
-    onPress={(data, details = null) => {
-      // 'details' is provided when fetchDetails = true
-      //const address = data.description.split(',');
-     
-      console.log(data, details )
-    }}
-    query={{
-      key: 'AIzaSyAn9wVgUpu0h_LAHr0LPrzcKQjQ9uVczT8',
-      language: 'en',
-    }}
-  />
-  
-  <View style={{paddingTop:50, justifyContent:'center'}}>
-    {/* <GooglePlacesAutocomplete
+      <View style={{paddingTop: 50, justifyContent: 'center'}}>
+        {/* <GooglePlacesAutocomplete
                         fetchDetails={true}
                         style={{backgroundColor:"red"}}
                         placeholder='Search Other Location'
@@ -58,11 +56,11 @@ const Stats = () => {
                       }}
                     
                      /> */}
-    </View>
+      </View>
     </>
-  )
-}
+  );
+};
 
-export default Stats
+export default Stats;
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({});
